@@ -16,6 +16,14 @@ pip install shodan
 
 ## 🐉 三、工具使用
 
+### 3.0 验证API Key
+
+比如想要验证你的Shodan API Key是否有效，可以使用该参数：
+
+```
+python3 Shodan-API-Search.py -k <Shodan API Key>
+```
+
 ### 3.1 查询指定语句并导出
 
 比如想要查询 `port:22` 这个测绘语句，找到200个资产（一页是100个资产），并导出为 `output.txt`：
