@@ -1,4 +1,4 @@
-import argparse, sys
+import argparse, sys, csv
 import shodan
 
 def logo():
@@ -8,7 +8,7 @@ def logo():
   \__ \/ __ \/ __ \/ __  / __ `/ __ \   / /| | / /_/ // /    \__ \/ _ \/ __ `/ ___/ ___/ __ \
  ___/ / / / / /_/ / /_/ / /_/ / / / /  / ___ |/ ____// /    ___/ /  __/ /_/ / /  / /__/ / / /
 /____/_/ /_/\____/\__,_/\__,_/_/ /_/  /_/  |_/_/   /___/   /____/\___/\__,_/_/   \___/_/ /_/ 
-                 [+] Author:AabyssZG          [+] Version: 1.2                             '''
+                 [+] Author: AabyssZG         [+] Version: 1.2                             '''
     print(logo0)
 
 def key(api_key):
@@ -42,31 +42,46 @@ def host(api_key, ip):
         sys.exit()
     except shodan.APIError as e:
         print('[-] API Error: %s' % e)
+    except KeyboardInterrupt:
+        print("[.] You manually terminated the process ")
+        sys.exit()
 
 def search(api_key, query, max_pages, output_file):
     if (api_key and query and max_pages and output_file) == True:
         print('[-] Please fill in the parameter')
         sys.exit()
     api = shodan.Shodan(api_key)
-    file_object = open(output_file, 'a')
-    try:
-        print("[+] Start information query search\n")
-        for page in range(1, max_pages + 1):
-            results = api.search(query=query, page=page)
-            #print(results)
-            print('[+] Results found on page %d. All assets are %s' % (page, results['total']))
+    output_csv = output_file + ".csv"
+    output_txt = output_file + ".txt"
+    print("[+] Start information query search\n")
+    with open(output_csv, mode='w', newline='', encoding='utf-8') as csv_file, open(output_txt, mode='w', encoding='utf-8') as txt_file:
 
-            if not results['matches']:
-                print('[-] No more results on page %d, stopping.' % page)
-                break
+        csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(['IP Address', 'Port', 'Organization', 'Country', 'Data'])
 
-            for result in results['matches']:
-                file_object.writelines(result['ip_str'] + '\n')
+        try:
+            for page in range(1, max_pages + 1):
+                results = api.search(query=query, page=page)
+                print(f'[+] Results found on page {page}: {results["total"]}')
 
-    except shodan.APIError as e:
-        print('[-] API Error: %s' % e)
-    finally:
-        file_object.close()
+                if not results['matches']:
+                    print(f'[-] No more results on page {page}, stopping.')
+                    break
+
+                for match in results['matches']:
+                    ip_address = match.get('ip_str', 'N/A')
+                    port = match.get('port', 'N/A')
+                    organization = match.get('org', 'N/A')
+                    country = match.get('location', {}).get('country_name', 'N/A')
+                    data = match.get('data', 'N/A')
+
+                    csv_writer.writerow([ip_address, port, organization, country, data])
+                    txt_file.write(ip_address + '\n')
+        except shodan.APIError as e:
+            print(f'[-] Error: {e}')
+        except KeyboardInterrupt:
+            print("[.] You manually terminated the process ")
+            sys.exit()
 
 if __name__ == "__main__":
     logo()
@@ -75,7 +90,7 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--query', help='Search query')
     parser.add_argument('-p', '--page', type=int, default='1', help='Number of pages to search')
     parser.add_argument('-i', '--host', help='Host you need to query')
-    parser.add_argument('-o', '--output', default='ip.txt', help='Output file name (default: ip.txt)')
+    parser.add_argument('-o', '--output', default='output', help='Output file name (default: output)')
 
     args = parser.parse_args()
     if args.query:
