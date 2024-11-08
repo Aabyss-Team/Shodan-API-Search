@@ -26,10 +26,10 @@ python3 Shodan-API-Search.py -k <Shodan API Key>
 
 ### 3.1 查询指定语句并导出
 
-比如想要查询 `port:22` 这个测绘语句，找到200个资产（一页是100个资产），并导出为 `output.txt` 和 `output.csv`：
+比如想要查询 `port:22 country:US` 这个测绘语句（国家为美国，端口22开放），找到200个资产（一页是100个资产），并导出为 `output.txt` 和 `output.csv`：
 
 ```
-python3 Shodan-API-Search.py -k <Shodan API Key> -s "port:22" -p 2 -o output
+python3 Shodan-API-Search.py -k <Shodan API Key> -s "port:22 country:US" -p 2 -o output
 ```
 
 注：`csv` 文件内记录了所有获取到的IP/端口/组织/国家/端口数据， `txt` 文件里存储所有的资产IP
